@@ -108,6 +108,7 @@ public class Main {
                 .collect(Collectors.groupingBy(Employee::getDepartment));
     }
 
+    //Из списока сорудников с помощью стрима создать Map<String, Double> с отделами и средней зарплатой внутри отдела
     public static Map<String,Double> getMapAverageSalaryInDepartment(List<Employee> employeeList){
         return employeeList.stream()
                 .collect(Collectors.groupingBy(Employee::getDepartment,Collectors.averagingDouble(Employee::getSalary)));
