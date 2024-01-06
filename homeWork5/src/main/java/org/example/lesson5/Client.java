@@ -5,6 +5,7 @@ package org.example.lesson5;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.SQLOutput;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -19,7 +20,8 @@ public class Client {
           System.out.println(input.nextLine());
         }
       } catch (Exception e) {
-        throw new RuntimeException(e);
+        System.out.println("Ошибка!\n" +
+                "Введены не корректные символы");;
       }
     }).start();
 

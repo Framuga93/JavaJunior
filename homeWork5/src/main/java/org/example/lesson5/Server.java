@@ -32,22 +32,33 @@ public class Server {
 
                 new Thread(() -> {
                     try (Scanner input = wrapper.getInput(); PrintWriter output = wrapper.getOutput()) {
-                        output.println("Подключение успешно. Список всех клиентов: " + clients);  // msg from server to client
+                        output.println("Подключение успешно. Список всех клиентов: " + clients);
 
                         while (true) {
-                            String clientInput = input.nextLine();  // wait msg from client
+                            String clientInput = input.nextLine();
                             if (Objects.equals("q", clientInput)) {
                                 clientQuit(clientId);
                                 break;
                             }
 
                             if (clientInput.startsWith("@")) {
-                                sendPrivateMsg(clientId, clientInput);
+                                sendPrivateMsg(wrapper, clientInput);
                                 continue;
                             }
 
                             if (Objects.equals("/admin", clientInput)) {
+                                authAdmin(wrapper, input);
+                                continue;
+                            }
 
+                            if (Objects.equals("kick", clientInput) && wrapper.isAdmin()) {
+                                kickIfAdmin(wrapper, input);
+                                continue;
+                            }
+
+                            if (Objects.equals("clients", clientInput)) {
+                                getClientList(wrapper);
+                                continue;
                             }
 
                             publicMsg(clientId, clientInput);
@@ -58,6 +69,59 @@ public class Server {
         }
     }
 
+
+    private static void clientQuit(long clientId) {
+        clients.remove(clientId);
+        clients.values().forEach(it -> it.getOutput().println("Клиент[" + clientId + "] отключился"));
+    }
+
+    private static void sendPrivateMsg(User wrapper, String clientInput) {
+        long destinationId = Long.parseLong(clientInput.substring(1, 2));
+        if (destinationId < clients.size()+1) {
+            User destination = clients.get(destinationId);
+            List<String> clientMsg = new ArrayList<>(List.of(clientInput.split(" ")));
+            clientMsg.remove(0);
+            String result = clientMsg.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(" "));
+            destination.getOutput().println("Сообщение от [" + wrapper.getId() + "] : " + result);
+            return;
+        }
+        wrapper.getOutput().println("Такого пользователя не существует\n" +
+                "Список пользователей " + clients);
+    }
+
+    private static void authAdmin(User wrapper, Scanner input) {
+        wrapper.getOutput().println("Введите пароль");
+        int tempPass = 0;
+        while (true) {
+            String pass = input.nextLine();
+            if (tempPass > 2) {
+                wrapper.getOutput().println("Вы ввели парольн не правильно слишком много раз");
+                break;
+            }
+            if (pass.equals("pass")) {
+                wrapper.getOutput().println("Добро пожаловать Админ ВСЕЯРУСИ");
+                wrapper.setAdmin(true);
+                break;
+            }
+            wrapper.getOutput().println("Не верный пароль");
+            tempPass++;
+        }
+    }
+
+    private static void kickIfAdmin(User wrapper, Scanner input) {
+        wrapper.getOutput().println("Введите ID того кого нужно кикнуть \n" +
+                "Список клиентов " + clients);
+        String kickId = input.nextLine();
+        clients.remove(Long.parseLong(kickId));
+        wrapper.getOutput().println("Клиент " + kickId + " кикнут");
+    }
+
+    private static void getClientList(User wrapper) {
+        wrapper.getOutput().println(clients);
+    }
+
     private static void publicMsg(long clientId, String clientInput) {
         clients.forEach((id, socket) -> {
             if (socket.getId() != clientId)
@@ -65,21 +129,6 @@ public class Server {
         });
     }
 
-    private static void clientQuit(long clientId) {
-        clients.remove(clientId);
-        clients.values().forEach(it -> it.getOutput().println("Клиент[" + clientId + "] отключился"));
-    }
-
-    private static void sendPrivateMsg(long clientId, String clientInput) {
-        long destinationId = Long.parseLong(clientInput.substring(1, 2));
-        User destination = clients.get(destinationId);
-        List<String> clientMsg = new ArrayList<>(List.of(clientInput.split(" ")));
-        clientMsg.remove(0);
-        String result = clientMsg.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(" "));
-        destination.getOutput().println("Сообщение от [" + clientId + "] :" + result);
-    }
 
 }
 

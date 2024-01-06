@@ -1,6 +1,7 @@
 package org.example.lesson5;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -8,6 +9,7 @@ import java.net.Socket;
 import java.util.Scanner;
 
 @Getter
+@Setter
 class User implements AutoCloseable {
 
     private final long id;
@@ -15,6 +17,7 @@ class User implements AutoCloseable {
     private final Scanner input;
     private final PrintWriter output;
 
+    private boolean admin = false;
 
     User(long id, Socket socket) throws IOException {
         this.id = id;
@@ -30,6 +33,8 @@ class User implements AutoCloseable {
 
     @Override
     public String toString() {
+        if (this.isAdmin())
+            return String.format("%s - ADMIN", socket.getInetAddress().toString());
         return String.format("%s", socket.getInetAddress().toString());
     }
 }
